@@ -1,148 +1,73 @@
+# StereoCrafter WebUI
 
-<div align="center">
-<h2>StereoCrafter: Diffusion-based Generation of Long and High-fidelity Stereoscopic 3D from Monocular Videos</h2>
+A one-click web interface for [StereoCrafter](https://github.com/TencentARC/StereoCrafter) — convert 2D videos to stereoscopic 3D from your browser.
 
-Sijie Zhao*&emsp;
-Wenbo Hu*&emsp;
-Xiaodong Cun*&emsp;
-Yong Zhang&dagger;&emsp;
-Xiaoyu Li&dagger;&emsp;<br>
-Zhe Kong&emsp;
-Xiangjun Gao&emsp;
-Muyao Niu&emsp;
-Ying Shan
+No command line needed. Just run the launcher, upload a video, and download your 3D result.
 
-&emsp;* equal contribution &emsp; &dagger; corresponding author 
+## Quick Start
 
-<h3>Tencent AI Lab&emsp;&emsp;ARC Lab, Tencent PCG</h3>
-
-<a href='https://arxiv.org/abs/2409.07447'><img src='https://img.shields.io/badge/arXiv-PDF-a92225'></a> &emsp;
-<a href='https://stereocrafter.github.io/'><img src='https://img.shields.io/badge/Project_Page-Page-64fefe' alt='Project Page'></a> &emsp;
-<a href='https://huggingface.co/TencentARC/StereoCrafter'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Weights-yellow'></a>
-</div>
-
-## 💡 Abstract
-
-We propose a novel framework to convert any 2D videos to immersive stereoscopic 3D ones that can be viewed on different display devices, like 3D Glasses, Apple Vision Pro and 3D Display. It can be applied to various video sources, such as movies, vlogs, 3D cartoons, and AIGC videos.
-
-![teaser](assets/teaser.jpg)
-
-## 📣 News
-- `2024/12/27` We released our inference code and model weights.
-- `2024/09/11` We submitted our technical report on arXiv and released our project page.
-
-## 🎞️ Showcases
-Here we show some examples of input videos and their corresponding stereo outputs in Anaglyph 3D format.
-<div align="center">
-    <img src="assets/demo.gif">
-</div>
-
-
-## 🛠️ Installation
-
-#### 1. Set up the environment
-We run our code on Python 3.8 and Cuda 11.8.
-You can use Anaconda or Docker to build this basic environment.
-
-#### 2. Clone the repo
-```bash
-# use --recursive to clone the dependent submodules
-git clone --recursive https://github.com/TencentARC/StereoCrafter
-cd StereoCrafter
+**Windows:**
+```
+git clone --recursive https://github.com/user/StereoCrafterWebUI
+cd StereoCrafterWebUI
+run.bat
 ```
 
-#### 3. Install the requirements
-```bash
-pip install -r requirements.txt
+**Linux/Mac:**
+```
+git clone --recursive https://github.com/user/StereoCrafterWebUI
+cd StereoCrafterWebUI
+chmod +x run.sh && ./run.sh
 ```
 
+That's it. The launcher handles everything automatically:
+1. Creates a Python virtual environment
+2. Installs dependencies (detects your GPU and installs the correct PyTorch)
+3. Compiles the CUDA module
+4. Opens the web UI in your browser
 
-#### 4. Install customized 'Forward-Warp' package for forward splatting
-```
-cd ./dependency/Forward-Warp
-chmod a+x install.sh
-./install.sh
-```
+## Model Weights
 
+On first launch, the UI shows a **Model Setup** panel to download the required models:
 
-## 📦 Model Weights
+| Model | Size | Auth Required |
+|---|---|---|
+| [DepthCrafter](https://huggingface.co/tencent/DepthCrafter) | ~5 GB | No |
+| [StereoCrafter](https://huggingface.co/TencentARC/StereoCrafter) | ~10 GB | No |
+| [SVD img2vid](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt-1-1) | ~10 GB | Yes — accept license on HuggingFace first |
 
-#### 1. Download the [SVD img2vid model](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt-1-1) for the image encoder and VAE.
+For SVD: visit the [model page](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt-1-1), accept the license, then paste your [HuggingFace token](https://huggingface.co/settings/tokens) into the UI.
 
-```bash
-# in StereoCrafter project root directory
-mkdir weights
-cd ./weights
-git lfs install
-git clone https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt-1-1
-```
+## Requirements
 
-#### 2. Download the [DepthCrafter model](https://huggingface.co/tencent/DepthCrafter) for the video depth estimation.
-```bash
-git clone https://huggingface.co/tencent/DepthCrafter
-```
+- **GPU**: NVIDIA with 16GB+ VRAM (24GB+ for 2K video)
+- **CUDA Toolkit**: Installed and on PATH ([download](https://developer.nvidia.com/cuda-toolkit))
+- **Python**: 3.8+
+- **OS**: Windows 10/11 or Linux
 
-#### 3. Download the [StereoCrafter model](https://huggingface.co/TencentARC/StereoCrafter) for the stereo video generation.
-```bash
-git clone https://huggingface.co/TencentARC/StereoCrafter
-```
+Tested on RTX 5090 (CUDA 12.8) and should work on GPUs from GTX 1080 to RTX 50-series.
 
+## Output Formats
 
-## 🔄 Inference
+- **Side-by-Side** — for 3D displays, VR headsets
+- **Anaglyph** — red/cyan, viewable with basic 3D glasses
 
-Script:
+## Parameters
 
-```bash
-# in StereoCrafter project root directory
-sh run_inference.sh
-```
+Most users can leave defaults and just click **Convert to 3D**. For fine-tuning:
 
-There are two main steps in this script for generating stereo video.
+| Parameter | Default | What it does |
+|---|---|---|
+| Max Disparity | 20 | 3D depth strength. Higher = more pronounced 3D |
+| Process Length | -1 | Frames to process (-1 = all) |
+| Batch Size | 10 | Lower = less VRAM |
+| Tile Number | 1 | Use 2 for 2K+, 4 for 4K resolution |
 
-#### 1. Depth-Based Video Splatting Using the Video Depth from DepthCrafter
-Execute the following command:
-```bash
-python depth_splatting_inference.py --pre_trained_path [PATH] --unet_path [PATH]
-                                    --input_video_path [PATH] --output_video_path [PATH]
-```
-Arguments:
-- `--pre_trained_path`: Path to the SVD img2vid model weights (e.g., `./weights/stable-video-diffusion-img2vid-xt-1-1`).
-- `--unet_path`: Path to the DepthCrafter model weights (e.g., `./weights/DepthCrafter`).
-- `--input_video_path`: Path to the input video (e.g., `./source_video/camel.mp4`).
-- `--output_video_path`: Path to the output video (e.g., `./outputs/camel_splatting_results.mp4`).
-- `--max_disp`: Parameter controlling the maximum disparity between the generated right video and the input left video. Default value is `20` pixels.
+## Upstream
 
-The first step generates a video grid with input video, visualized depth map, occlusion mask, and splatting right video, as shown below:
+This is a WebUI wrapper around [StereoCrafter by Tencent ARC Lab](https://github.com/TencentARC/StereoCrafter). All credit for the core algorithm goes to the original authors.
 
-<img src="assets/camel_splatting_results.jpg" alt="camel_splatting_results" width="800"/> 
-
-#### 2. Stereo Video Inpainting of the Splatting Video
-Execute the following command:
-```bash
-python inpainting_inference.py --pre_trained_path [PATH] --unet_path [PATH]
-                               --input_video_path [PATH] --save_dir [PATH]
-```
-Arguments:
-- `--pre_trained_path`: Path to the SVD img2vid model weights (e.g., `./weights/stable-video-diffusion-img2vid-xt-1-1`).
-- `--unet_path`: Path to the StereoCrafter model weights (e.g., `./weights/StereoCrafter`).
-- `--input_video_path`: Path to the splatting video result generated by the first stage (e.g., `./outputs/camel_splatting_results.mp4`).
-- `--save_dir`: Directory for the output stereo video (e.g., `./outputs`).
-- `--tile_num`: The number of tiles in width and height dimensions for tiled processing, which allows for handling high resolution input without requiring more GPU memory. The default value is `1` (1 $\times$ 1 tile). For input videos with a resolution of 2K or higher, you could use more tiles to avoid running out of memory.
-
-The stereo video inpainting generates the stereo video result in side-by-side format and anaglyph 3D format, as shown below:
-
-<img src="assets/camel_sbs.jpg" alt="camel_sbs" width="800"/> 
-
-<img src="assets/camel_anaglyph.jpg" alt="camel_anaglyph" width="400"/>
-
-## 🤝 Acknowledgements
-
-We would like to express our gratitude to the following open-source projects:
-- [Stable Video Diffusion](https://github.com/Stability-AI/generative-models): A latent diffusion model trained to generate video clips from an image or text conditioning.
-- [DepthCrafter](https://github.com/Tencent/DepthCrafter): A novel method to generate temporally consistent depth sequences from videos.
-
-
-## 📚 Citation
+If you use this in research, please cite the original paper:
 
 ```bibtex
 @article{zhao2024stereocrafter,
